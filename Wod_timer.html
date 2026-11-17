@@ -1,1374 +1,1312 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="theme-color" content="#111111" />
-<title>WOD 프로 타이머</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
-<style>
-* {
-box-sizing: border-box;
--webkit-tap-highlight-color: transparent;
-user-select: none;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b0d10" />
+  <title>WOD 타이머</title>
+  <style>
+    :root {
+      --bg-app: #0b0d10;
+      --bg-card: #161a20;
+      --bg-card-2: #1f252e;
+      --text-main: #f5f7fa;
+      --text-sub: #9aa3b2;
+      --border: #2a313d;
 
-html, body {
-margin: 0;
-padding: 0;
-width: 100%;
-height: 100%;
-background-color: #090909;
-color: #ffffff;
-font-family: 'Noto Sans KR', 'Inter', sans-serif;
-overflow: hidden;
-}
+      --prep-bg: #f4d03f;
+      --prep-fg: #111111;
 
-/* 초대형 숫자 가독성 극대화 (장폭체 느낌의 압축 비율 및 고정폭 숫자) */
-.timer-digits {
-font-family: 'Inter', sans-serif;
-font-weight: 900;
-font-variant-numeric: tabular-nums;
-letter-spacing: -0.04em;
-line-height: 0.92;
-transform: scaleY(1.18);
-}
+      --work-bg: #58d68d;
+      --work-fg: #0b1910;
 
-.sub-digits {
-font-family: 'Inter', sans-serif;
-font-weight: 800;
-font-variant-numeric: tabular-nums;
-letter-spacing: -0.03em;
-line-height: 1;
-transform: scaleY(1.1);
-}
+      --rest-bg: #e74c3c;
+      --rest-fg: #ffffff;
 
-/* 상태별 테마 컬러 (참고 UI 기반 고대비 색상) */
-.theme-prepare {
-background-color: #F2E852;
-color: #111111;
-}
-.theme-work {
-background-color: #78D64B;
-color: #111111;
-}
-.theme-rest {
-background-color: #F24444;
-color: #FFFFFF;
-}
-.theme-cycleRest {
-background-color: #F5D742;
-color: #111111;
-}
-.theme-cooldown {
-background-color: #3B82F6;
-color: #FFFFFF;
-}
-.theme-finished {
-background-color: #22C55E;
-color: #111111;
-}
+      --cool-bg: #3498db;
+      --cool-fg: #ffffff;
 
-/* 스크롤바 숨김 처리 */
-.no-scrollbar::-webkit-scrollbar {
-display: none;
-}
-.no-scrollbar {
--ms-overflow-style: none;
-scrollbar-width: none;
-}
+      --done-bg: #2c3e50;
+      --done-fg: #ffffff;
+    }
 
-/* Safe Area 대응 */
-.safe-top {
-padding-top: max(10px, env(safe-area-inset-top));
-}
-.safe-bottom {
-padding-bottom: max(10px, env(safe-area-inset-bottom));
-}
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
 
-/* 부드러운 색상 전환 */
-.phase-transition {
-transition: background-color 0.22s ease, color 0.22s ease;
-}
-</style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-app);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--bg-app);
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #0b0d10;
+      border-bottom: 1px solid #1b2028;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    .top-center {
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .mode-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .total-time {
+      font-size: 14px;
+      font-weight: 700;
+      color: #dce3ec;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .top-right-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .main-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      cursor: pointer;
+    }
+
+    .current-phase-box {
+      flex: 1.55;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .phase-label {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .big-clock {
+      font-size: clamp(68px, 19vw, 108px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tap-hint {
+      margin-top: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .next-phase-box {
+      flex: 0.45;
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-top: 2px solid rgba(0, 0, 0, 0.14);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .next-label {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .next-clock {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1.05;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stopwatch-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--work-bg);
+      color: var(--work-fg);
+      cursor: pointer;
+    }
+
+    .sw-main {
+      flex: 1.5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .sw-lap-badge {
+      font-size: 30px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .sw-clock {
+      font-size: clamp(64px, 18vw, 102px);
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sw-sub {
+      flex: 0.55;
+      min-height: 92px;
+      background: #4bc77f;
+      border-top: 2px solid rgba(0, 0, 0, 0.14);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+    }
+
+    .sw-sub-title {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .sw-sub-time {
+      font-size: 30px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sw-laps-list {
+      max-height: 110px;
+      overflow-y: auto;
+      background: #11151b;
+      color: var(--text-main);
+      font-size: 13px;
+      padding: 6px 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sw-lap-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #1e242e;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .control-panel {
+      background: #0b0d10;
+      padding: 10px 16px 12px;
+      border-top: 1px solid #1b2028;
+      flex-shrink: 0;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 12px;
+    }
+
+    .counter-box {
+      min-width: 84px;
+      text-align: center;
+    }
+
+    .counter-num {
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 1.05;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .counter-num.blue {
+      color: #4aa3ff;
+    }
+
+    .counter-num.yellow {
+      color: #f4d03f;
+    }
+
+    .counter-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e6ebf2;
+      margin-top: 2px;
+    }
+
+    .play-btn-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .play-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: none;
+      font-size: 26px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    .play-btn:active {
+      transform: scale(0.95);
+    }
+
+    .play-caption {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f5f7fa;
+      margin-top: 5px;
+    }
+
+    .bottom-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #14181f;
+      border-top: 1px solid #242b36;
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-radius: 14px;
+      color: #9ba5b4;
+      padding: 7px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #272e3a;
+      color: #ffffff;
+    }
+
+    .tab-ico {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .panel-screen {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 24px;
+      background: var(--bg-app);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .panel-btn {
+      background: var(--bg-card-2);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .panel-btn.primary {
+      background: #2ecc71;
+      color: #09150d;
+      border-color: #2ecc71;
+    }
+
+    .section-banner {
+      background: var(--bg-card);
+      color: var(--text-sub);
+      text-align: center;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 12px;
+      background: var(--bg-card);
+      border: 1px solid #222832;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .setting-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .dot.prep { background: var(--prep-bg); }
+    .dot.work { background: var(--work-bg); }
+    .dot.rest { background: var(--rest-bg); }
+    .dot.cool { background: var(--cool-bg); }
+
+    .setting-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .setting-desc {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+
+    .setting-val {
+      font-size: 24px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chev {
+      font-size: 16px;
+      color: var(--text-sub);
+    }
+
+    .editor-box {
+      background: var(--bg-card-2);
+      border: 1px solid #353f4f;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .step-btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .step-readout {
+      min-width: 90px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .preset-card {
+      background: var(--bg-card);
+      border: 1px solid #242b36;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
-<body class="flex justify-center items-center">
-
-<!-- 모바일 앱 컨테이너 (데스크톱에서는 중앙 스마트폰 비율 유지) -->
-<div id="app" class="relative w-full max-w-[480px] h-full sm:h-[94dvh] sm:max-h-[880px] bg-[#111111] sm:rounded-[36px] sm:border sm:border-neutral-800 sm:shadow-2xl flex flex-col overflow-hidden">
-
-<!-- ==================== 1. 타이머 메인 화면 (타바타 & 라운드 공용) ==================== -->
-<div id="screen-timer" class="flex-1 flex flex-col h-full overflow-hidden">
-
-<!-- 상단 헤더 -->
-<header class="safe-top px-4 pb-2 bg-[#111111] flex items-center justify-between shrink-0 z-10">
-<!-- 좌측: 설정 톱니바퀴 -->
-<button id="btn-open-settings" class="p-2.5 rounded-full text-[#F2E852] active:scale-90 transition-transform" aria-label="인터벌 설정">
-<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-</svg>
-</button>
-
-<!-- 중앙: 모드 제목 & 전체 남은 시간 -->
-<div class="flex flex-col items-center">
-<span id="header-mode-title" class="text-base font-bold text-[#F2E852] tracking-tight">타바타</span>
-<span id="header-total-time" class="text-xl font-extrabold text-[#F2E852] tabular-nums leading-tight">10:05</span>
-</div>
-
-<!-- 우측: 사운드 토글 & 리셋 버튼 -->
-<div class="flex items-center gap-1">
-<button id="btn-toggle-mute" class="p-2 rounded-full text-neutral-300 active:scale-90 transition-transform" aria-label="음소거 전환">
-<!-- 소리 켜짐 아이콘 -->
-<svg id="icon-sound-on" class="w-6 h-6 text-[#F2E852]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-</svg>
-<!-- 음소거 아이콘 -->
-<svg id="icon-sound-off" class="w-6 h-6 text-neutral-500 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-<path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-</svg>
-</button>
-
-<button id="btn-reset-timer" class="w-10 h-10 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center text-[#F2E852] active:scale-90 transition-transform" aria-label="타이머 초기화">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-</svg>
-</button>
-</div>
-</header>
-
-<!-- 메인 카운트다운 블록 (화면의 약 52% 차지) -->
-<div id="main-phase-block" class="flex-1 flex flex-col items-center justify-center px-4 phase-transition theme-prepare relative">
-<div id="main-phase-label" class="text-3xl sm:text-4xl font-black tracking-tight mb-4 sm:mb-6">준비</div>
-<div id="main-phase-time" class="timer-digits text-[24vw] sm:text-[116px] select-none">00:20</div>
-
-<!-- 현재 진행 상태 미세 표시 (예: 1 / 4 라운드) -->
-<div id="main-phase-subinfo" class="mt-6 text-sm font-bold opacity-75 tracking-wide">
-터치하여 일시정지 / 시작 가능
-</div>
-</div>
-
-<!-- 다음 단계 미리보기 바 (Next Interval Preview) -->
-<div id="next-phase-bar" class="h-24 sm:h-28 shrink-0 flex flex-col items-center justify-center px-4 phase-transition theme-work border-t border-black/10">
-<div id="next-phase-label" class="text-base sm:text-lg font-extrabold leading-tight">운동</div>
-<div id="next-phase-time" class="sub-digits text-3xl sm:text-4xl mt-1">00:25</div>
-</div>
-
-<!-- 하단 컨트롤 및 카운터 영역 -->
-<div class="bg-[#111111] px-5 pt-4 pb-3 shrink-0 grid grid-cols-3 items-center">
-<!-- 좌측: 남은 라운드 -->
-<div class="flex flex-col items-center justify-center">
-<span id="counter-rounds" class="text-4xl sm:text-5xl font-black text-[#4DA3FF] tabular-nums leading-none">4</span>
-<span class="text-xs sm:text-sm font-bold text-neutral-300 mt-1.5">남은 라운드</span>
-</div>
-
-<!-- 중앙: 시작 / 일시정지 원형 버튼 -->
-<div class="flex flex-col items-center justify-center">
-<button id="btn-play-pause" class="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-[#F2E852] text-[#111111] flex items-center justify-center shadow-lg active:scale-95 transition-all ring-4 ring-black ring-inset" aria-label="시작 또는 일시정지">
-<!-- Play 아이콘 -->
-<svg id="icon-play" class="w-9 h-9 ml-1" fill="currentColor" viewBox="0 0 24 24">
-<path d="M8 5v14l11-7z" />
-</svg>
-<!-- Pause 아이콘 -->
-<svg id="icon-pause" class="w-9 h-9 hidden" fill="currentColor" viewBox="0 0 24 24">
-<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-</svg>
-</button>
-<span id="label-play-pause" class="text-xs sm:text-sm font-bold text-[#F2E852] mt-1.5">시작</span>
-</div>
-
-<!-- 우측: 남은 사이클 (타바타 모드 전용) -->
-<div id="cycle-counter-wrapper" class="flex flex-col items-center justify-center">
-<span id="counter-cycles" class="text-4xl sm:text-5xl font-black text-[#F2E852] tabular-nums leading-none">3</span>
-<span class="text-xs sm:text-sm font-bold text-neutral-300 mt-1.5">남은 사이클</span>
-</div>
-</div>
-</div>
-
-<!-- ==================== 2. 스톱워치 화면 (For Time / Lap) ==================== -->
-<div id="screen-stopwatch" class="hidden flex-1 flex flex-col h-full overflow-hidden">
-<!-- 상단 헤더 -->
-<header class="safe-top px-4 pb-2 bg-[#111111] flex items-center justify-between shrink-0">
-<div class="w-10"></div>
-<span class="text-lg font-bold text-[#78D64B]">스톱워치 (For Time)</span>
-<button id="btn-sw-reset" class="w-10 h-10 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center text-[#78D64B] active:scale-90 transition-transform" aria-label="스톱워치 초기화">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-</svg>
-</button>
-</header>
-
-<!-- 메인 스톱워치 녹색 블록 -->
-<div id="sw-main-block" class="flex-1 bg-[#78D64B] text-[#111111] flex flex-col items-center justify-center px-4 cursor-pointer active:brightness-95 transition">
-<div class="text-3xl sm:text-4xl font-black tracking-tight mb-4">타임 랩</div>
-<div id="sw-main-time" class="timer-digits text-[24vw] sm:text-[116px]">00:00</div>
-<div class="mt-5 px-3 py-1 rounded-full bg-black/15 text-xs font-extrabold">
-화면을 터치하면 랩(구간)이 기록됩니다
-</div>
-</div>
-
-<!-- 최근 랩 / 전체 랩 목록 영역 -->
-<div class="h-28 bg-[#68C13E] text-[#111111] border-t border-black/15 flex flex-col items-center justify-center px-4 shrink-0">
-<div class="text-sm font-extrabold opacity-80">직전 랩 기록 (<span id="sw-lap-count">0</span>개)</div>
-<div id="sw-last-lap" class="sub-digits text-3xl sm:text-4xl mt-1">00:00</div>
-</div>
-
-<!-- 랩 히스토리 드로어 (기록이 있을 때 스크롤 가능) -->
-<div id="sw-lap-list" class="hidden max-h-24 overflow-y-auto bg-[#181818] px-5 py-2 border-t border-neutral-800 text-xs space-y-1 no-scrollbar">
-</div>
-
-<!-- 하단 스톱워치 컨트롤 -->
-<div class="bg-[#111111] px-6 pt-4 pb-3 shrink-0 grid grid-cols-3 items-center">
-<!-- 좌측: 랩 기록 버튼 -->
-<div class="flex flex-col items-center">
-<button id="btn-sw-lap" class="px-4 py-3 rounded-2xl bg-neutral-800 text-white font-bold text-sm active:scale-95 transition">
-랩 기록
-</button>
-</div>
-
-<!-- 중앙: 시작/일시정지 버튼 -->
-<div class="flex flex-col items-center">
-<button id="btn-sw-play-pause" class="w-20 h-20 rounded-full bg-[#78D64B] text-[#111111] flex items-center justify-center shadow-lg active:scale-95 transition ring-4 ring-black ring-inset">
-<svg id="icon-sw-play" class="w-9 h-9 ml-1" fill="currentColor" viewBox="0 0 24 24">
-<path d="M8 5v14l11-7z" />
-</svg>
-<svg id="icon-sw-pause" class="w-9 h-9 hidden" fill="currentColor" viewBox="0 0 24 24">
-<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-</svg>
-</button>
-<span id="label-sw-play-pause" class="text-xs font-bold text-[#78D64B] mt-1.5">시작</span>
-</div>
-
-<!-- 우측: 초기화 버튼 -->
-<div class="flex flex-col items-center">
-<button id="btn-sw-reset-bottom" class="px-4 py-3 rounded-2xl bg-neutral-800 text-neutral-300 font-bold text-sm active:scale-95 transition">
-초기화
-</button>
-</div>
-</div>
-</div>
-
-<!-- ==================== 3. 더보기 / WOD 프리셋 화면 ==================== -->
-<div id="screen-more" class="hidden flex-1 flex flex-col h-full bg-[#111111] overflow-y-auto no-scrollbar">
-<header class="safe-top px-5 pb-4 border-b border-neutral-800 shrink-0">
-<h1 class="text-xl font-black text-white">WOD 프리셋 & 환경설정</h1>
-<p class="text-xs text-neutral-400 mt-1">자주 사용하는 크로스핏/인터벌 세팅을 원터치로 불러옵니다.</p>
-</header>
-
-<div class="p-4 space-y-6 flex-1">
-<!-- 추천 WOD 프리셋 목록 -->
-<section>
-<h2 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3 px-1">추천 WOD 템플릿</h2>
-<div class="space-y-2.5">
-<button data-preset="classic-tabata" class="preset-btn w-full text-left p-4 rounded-2xl bg-[#1C1C1E] border border-neutral-800 active:bg-neutral-800 transition flex items-center justify-between">
-<div>
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded-full bg-[#F2E852]"></span>
-<span class="font-bold text-white">클래식 타바타 (4분)</span>
-</div>
-<p class="text-xs text-neutral-400 mt-1">준비 10초 · 운동 20초 · 휴식 10초 · 8라운드 × 1사이클</p>
-</div>
-<span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#F2E852]/15 text-[#F2E852]">적용</span>
-</button>
-
-<button data-preset="emom-10" class="preset-btn w-full text-left p-4 rounded-2xl bg-[#1C1C1E] border border-neutral-800 active:bg-neutral-800 transition flex items-center justify-between">
-<div>
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded-full bg-[#4DA3FF]"></span>
-<span class="font-bold text-white">크로스핏 EMOM 10분</span>
-</div>
-<p class="text-xs text-neutral-400 mt-1">준비 10초 · 매 분 1분 운동 · 휴식 0초 · 10라운드</p>
-</div>
-<span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#4DA3FF]/15 text-[#4DA3FF]">적용</span>
-</button>
-
-<button data-preset="hiit-30-30" class="preset-btn w-full text-left p-4 rounded-2xl bg-[#1C1C1E] border border-neutral-800 active:bg-neutral-800 transition flex items-center justify-between">
-<div>
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded-full bg-[#78D64B]"></span>
-<span class="font-bold text-white">고강도 인터벌 (30초 / 30초)</span>
-</div>
-<p class="text-xs text-neutral-400 mt-1">준비 15초 · 운동 30초 · 휴식 30초 · 10라운드</p>
-</div>
-<span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#78D64B]/15 text-[#78D64B]">적용</span>
-</button>
-
-<button data-preset="boxing-round" class="preset-btn w-full text-left p-4 rounded-2xl bg-[#1C1C1E] border border-neutral-800 active:bg-neutral-800 transition flex items-center justify-between">
-<div>
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 rounded-full bg-[#F24444]"></span>
-<span class="font-bold text-white">복싱 / 컨디셔닝 3분 라운드</span>
-</div>
-<p class="text-xs text-neutral-400 mt-1">준비 10초 · 운동 3분 · 휴식 1분 · 5라운드 · 쿨다운 1분</p>
-</div>
-<span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#F24444]/15 text-[#F24444]">적용</span>
-</button>
-</div>
-</section>
-
-<!-- 사운드 & 기기 설정 -->
-<section>
-<h2 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3 px-1">사운드 & 화면 설정</h2>
-<div class="rounded-2xl bg-[#1C1C1E] border border-neutral-800 divide-y divide-neutral-800">
-<!-- 소리 테스트 -->
-<div class="p-4 flex items-center justify-between">
-<div>
-<div class="font-bold text-sm text-white">신호음 테스트 (휘슬/비프)</div>
-<div class="text-xs text-neutral-400 mt-0.5">운동 전 사운드 출력 여부를 확인합니다</div>
-</div>
-<button id="btn-test-sound" class="px-3.5 py-2 rounded-xl bg-[#78D64B] text-[#111111] font-bold text-xs active:scale-95 transition">
-소리 듣기
-</button>
-</div>
-
-<!-- 3-2-1 카운트다운 비프음 토글 -->
-<div class="p-4 flex items-center justify-between">
-<div>
-<div class="font-bold text-sm text-white">종료 3초 전 카운트다운 비프음</div>
-<div class="text-xs text-neutral-400 mt-0.5">3, 2, 1초 남았을 때 짧은 알림음 재생</div>
-</div>
-<input id="chk-countdown-beep" type="checkbox" checked class="w-5 h-5 accent-[#78D64B] rounded cursor-pointer" />
-</div>
-
-<!-- 화면 꺼짐 방지 상태 안내 -->
-<div class="p-4 flex items-center justify-between">
-<div>
-<div class="font-bold text-sm text-white">운동 중 화면 꺼짐 방지</div>
-<div id="wakelock-status" class="text-xs text-[#78D64B] mt-0.5">타이머 실행 시 자동 활성화됨</div>
-</div>
-<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-neutral-800 text-neutral-300">자동</span>
-</div>
-</div>
-</section>
-</div>
-</div>
-
-<!-- ==================== 4. 하단 내비게이션 바 (4개 탭) ==================== -->
-<nav class="safe-bottom bg-[#111111] border-t border-neutral-800/90 px-3 pt-2 pb-1 grid grid-cols-4 gap-1 shrink-0">
-<!-- 타바타 탭 -->
-<button data-tab="tabata" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-2xl transition bg-[#2C2C2E] text-white">
-<svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-</svg>
-<span class="text-[11px] font-bold">타바타</span>
-</button>
-
-<!-- 라운드 탭 -->
-<button data-tab="round" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-2xl transition text-neutral-400">
-<svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
-</svg>
-<span class="text-[11px] font-bold">라운드</span>
-</button>
-
-<!-- 스톱워치 탭 -->
-<button data-tab="stopwatch" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-2xl transition text-neutral-400">
-<svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<circle cx="12" cy="12" r="9" />
-<circle cx="12" cy="12" r="2" fill="currentColor" />
-</svg>
-<span class="text-[11px] font-bold">스톱워치</span>
-</button>
-
-<!-- 더보기 탭 -->
-<button data-tab="more" class="nav-tab flex flex-col items-center justify-center py-1.5 rounded-2xl transition text-neutral-400">
-<svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-</svg>
-<span class="text-[11px] font-bold">더보기</span>
-</button>
-</nav>
-
-<!-- ==================== 5. 인터벌 상세 설정 모달 (참고 이미지 2, 4번 스타일) ==================== -->
-<div id="modal-settings" class="hidden absolute inset-0 bg-[#111111] z-30 flex flex-col">
-<!-- 상단 바: 취소 / 모드명 / 저장 -->
-<div class="safe-top px-5 pb-3 bg-[#111111] border-b border-neutral-800 flex items-center justify-between shrink-0">
-<button id="btn-settings-cancel" class="text-base font-bold text-neutral-300 py-1 px-2 active:opacity-70">취소</button>
-<span id="settings-modal-title" class="text-lg font-black text-white">타바타</span>
-<button id="btn-settings-save" class="text-base font-black text-[#78D64B] py-1 px-2 active:opacity-70">저장</button>
-</div>
-
-<!-- 인터벌 서브 헤더 -->
-<div class="bg-[#242426] py-2 text-center text-xs font-bold text-neutral-400 shrink-0">
-인터벌 설정 (항목을 터치해 시간/횟수 조절)
-</div>
-
-<!-- 설정 리스트 영역 -->
-<div id="settings-list-container" class="flex-1 overflow-y-auto divide-y divide-neutral-800/80 px-4 no-scrollbar">
-<!-- JS로 동적 렌더링 -->
-</div>
-</div>
-
-<!-- ==================== 6. 시간 / 숫자 조절 피커 팝업 ==================== -->
-<div id="modal-picker" class="hidden absolute inset-0 bg-black/75 z-40 flex items-end sm:items-center justify-center p-4">
-<div class="w-full max-w-sm bg-[#1E1E20] rounded-3xl border border-neutral-700 p-5 shadow-2xl">
-<div class="flex items-center justify-between mb-4">
-<span id="picker-title" class="text-lg font-black text-white">운동 시간</span>
-<button id="btn-picker-close" class="text-sm font-bold text-neutral-400 px-2 py-1">닫기</button>
-</div>
-
-<!-- 시간 조절기 (분 : 초) -->
-<div id="picker-time-controls" class="flex items-center justify-center gap-4 my-4">
-<!-- 분 조절 -->
-<div class="flex flex-col items-center">
-<button id="btn-min-up" class="w-14 h-11 rounded-xl bg-neutral-800 text-white font-black text-xl active:bg-neutral-700">+</button>
-<div class="my-2 text-center">
-<span id="picker-min-val" class="text-4xl font-black tabular-nums text-white">00</span>
-<div class="text-[11px] text-neutral-400 mt-0.5">분</div>
-</div>
-<button id="btn-min-down" class="w-14 h-11 rounded-xl bg-neutral-800 text-white font-black text-xl active:bg-neutral-700">-</button>
-</div>
-
-<span class="text-3xl font-black text-neutral-500 pb-4">:</span>
-
-<!-- 초 조절 -->
-<div class="flex flex-col items-center">
-<button id="btn-sec-up" class="w-14 h-11 rounded-xl bg-neutral-800 text-white font-black text-xl active:bg-neutral-700">+</button>
-<div class="my-2 text-center">
-<span id="picker-sec-val" class="text-4xl font-black tabular-nums text-white">25</span>
-<div class="text-[11px] text-neutral-400 mt-0.5">초</div>
-</div>
-<button id="btn-sec-down" class="w-14 h-11 rounded-xl bg-neutral-800 text-white font-black text-xl active:bg-neutral-700">-</button>
-</div>
-</div>
-
-<!-- 빠른 시간 프리셋 칩 -->
-<div id="picker-quick-chips" class="grid grid-cols-4 gap-2 mb-5">
-<button data-add-sec="5" class="quick-sec-btn py-2 rounded-xl bg-neutral-800 text-xs font-bold text-neutral-200 active:bg-neutral-700">+5초</button>
-<button data-add-sec="10" class="quick-sec-btn py-2 rounded-xl bg-neutral-800 text-xs font-bold text-neutral-200 active:bg-neutral-700">+10초</button>
-<button data-add-sec="30" class="quick-sec-btn py-2 rounded-xl bg-neutral-800 text-xs font-bold text-neutral-200 active:bg-neutral-700">+30초</button>
-<button data-set-zero="1" class="quick-sec-btn py-2 rounded-xl bg-neutral-800 text-xs font-bold text-[#F24444] active:bg-neutral-700">0초</button>
-</div>
-
-<!-- 횟수(라운드/사이클) 조절기 -->
-<div id="picker-count-controls" class="hidden flex items-center justify-center gap-6 my-6">
-<button id="btn-count-down" class="w-16 h-14 rounded-2xl bg-neutral-800 text-white font-black text-2xl active:bg-neutral-700">-</button>
-<div class="text-center min-w-[80px]">
-<span id="picker-count-val" class="text-5xl font-black tabular-nums text-[#4DA3FF]">4</span>
-<div id="picker-count-unit" class="text-xs text-neutral-400 mt-1">회</div>
-</div>
-<button id="btn-count-up" class="w-16 h-14 rounded-2xl bg-neutral-800 text-white font-black text-2xl active:bg-neutral-700">+</button>
-</div>
-
-<button id="btn-picker-confirm" class="w-full py-3.5 rounded-2xl bg-[#78D64B] text-[#111111] font-black text-base active:scale-98 transition">
-확인
-</button>
-</div>
-</div>
-
-<!-- ==================== 7. 알림 토스트 메시지 ==================== -->
-<div id="toast" class="pointer-events-none opacity-0 transition-opacity duration-200 absolute top-16 left-1/2 -translate-x-1/2 bg-neutral-800/95 text-white text-xs font-bold px-4 py-2.5 rounded-full border border-neutral-700 shadow-lg z-50 whitespace-nowrap">
-설정이 저장되었습니다
-</div>
-
-</div>
-
-<script>
-/**
-* ============================================================================
-* WOD 프로 타이머 애플리케이션 로직
-* - Web Audio API 기반 오프라인 비프음/휘슬 합성
-* - Screen Wake Lock API 화면 꺼짐 방지
-* - 타바타(사이클 포함), 라운드(EMOM/인터벌), 스톱워치(For Time) 상태 머신
-* ============================================================================
-*/
-
-// 1. 기본 설정 데이터 및 LocalStorage 관리
-const DEFAULT_CONFIGS = {
-tabata: {
-prepare: 20,
-work: 25,
-rest: 25,
-rounds: 4,
-cycles: 3,
-cycleRest: 30,
-cooldown: 0
-},
-round: {
-prepare: 23,
-work: 100, // 01:40
-rest: 0,
-rounds: 10,
-cycles: 1,
-cycleRest: 0,
-cooldown: 0
-}
-};
-
-let configs = loadConfigs();
-let appState = {
-activeTab: 'tabata', // 'tabata' | 'round' | 'stopwatch' | 'more'
-timerMode: 'tabata', // 'tabata' | 'round'
-isMuted: false,
-countdownBeep: true
-};
-
-function loadConfigs() {
-try {
-const saved = localStorage.getItem('wod_timer_configs_v1');
-if (saved) {
-return { ...DEFAULT_CONFIGS, ...JSON.parse(saved) };
-}
-} catch (e) {
-console.warn('설정 로드 실패, 기본값 사용:', e);
-}
-return JSON.parse(JSON.stringify(DEFAULT_CONFIGS));
-}
-
-function saveConfigs() {
-try {
-localStorage.setItem('wod_timer_configs_v1', JSON.stringify(configs));
-} catch (e) {
-console.warn('설정 저장 실패:', e);
-}
-}
-
-// 2. Web Audio API 사운드 엔진 (외부 파일 없이 즉각적인 운동 신호음 생성)
-class SoundEngine {
-constructor() {
-this.ctx = null;
-}
-
-init() {
-if (!this.ctx) {
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-if (AudioCtx) {
-this.ctx = new AudioCtx();
-}
-}
-if (this.ctx && this.ctx.state === 'suspended') {
-this.ctx.resume();
-}
-}
-
-playTone(freq, duration, type = 'sine', delay = 0, gainVal = 0.45) {
-if (appState.isMuted) return;
-this.init();
-if (!this.ctx) return;
-
-const now = this.ctx.currentTime + delay;
-const osc = this.ctx.createOscillator();
-const gain = this.ctx.createGain();
-
-osc.type = type;
-osc.frequency.setValueAtTime(freq, now);
-
-gain.gain.setValueAtTime(0.001, now);
-gain.gain.exponentialRampToValueAtTime(gainVal, now + 0.015);
-gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-osc.connect(gain);
-gain.connect(this.ctx.destination);
-
-osc.start(now);
-osc.stop(now + duration + 0.02);
-}
-
-// 3, 2, 1 카운트다운 짧은 비프음
-beepCountdown() {
-if (!appState.countdownBeep) return;
-this.playTone(880, 0.14, 'triangle', 0, 0.4);
-}
-
-// 운동(Work) 시작 신호음 (경쾌한 고음 2연타)
-beepWorkStart() {
-this.playTone(1046.5, 0.16, 'square', 0, 0.35);
-this.playTone(1318.5, 0.32, 'square', 0.18, 0.4);
-}
-
-// 휴식(Rest) / 쿨다운 전환 신호음 (낮고 안정적인 톤)
-beepRestStart() {
-this.playTone(587.33, 0.2, 'sine', 0, 0.45);
-this.playTone(440, 0.35, 'sine', 0.22, 0.45);
-}
-
-// 전체 WOD 완료 팡파르
-beepFinish() {
-this.playTone(523.25, 0.15, 'triangle', 0, 0.45);
-this.playTone(659.25, 0.15, 'triangle', 0.16, 0.45);
-this.playTone(783.99, 0.15, 'triangle', 0.32, 0.45);
-this.playTone(1046.5, 0.5, 'triangle', 0.48, 0.5);
-}
-
-// 랩 기록 터치음
-beepLap() {
-this.playTone(987.77, 0.1, 'sine', 0, 0.35);
-}
-}
-
-const sound = new SoundEngine();
-
-// 3. 화면 꺼짐 방지 (Screen Wake Lock API)
-let wakeLock = null;
-async function requestWakeLock() {
-const statusEl = document.getElementById('wakelock-status');
-try {
-if ('wakeLock' in navigator && !wakeLock) {
-wakeLock = await navigator.wakeLock.request('screen');
-if (statusEl) statusEl.textContent = '활성화됨 (운동 중 화면 꺼짐 방지 중)';
-wakeLock.addEventListener('release', () => {
-wakeLock = null;
-if (statusEl) statusEl.textContent = '대기 중 (타이머 실행 시 자동 켜짐)';
-});
-}
-} catch (err) {
-if (statusEl) statusEl.textContent = '브라우저 정책으로 대기 중';
-}
-}
-
-function releaseWakeLock() {
-if (wakeLock) {
-wakeLock.release().catch(() => {});
-wakeLock = null;
-}
-}
-
-// 4. 시간 포맷팅 유틸리티
-function formatMMSS(totalSeconds) {
-const sec = Math.max(0, Math.floor(totalSeconds));
-const m = Math.floor(sec / 60);
-const s = sec % 60;
-return ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')};
-}
-
-function formatShortSetting(totalSeconds) {
-const sec = Math.max(0, Math.floor(totalSeconds));
-const m = Math.floor(sec / 60);
-const s = sec % 60;
-if (m === 0) {
-return :${String(s).padStart(2, '0')}; } return ``${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
-function showToast(msg) {
-const toast = document.getElementById('toast');
-toast.textContent = msg;
-toast.classList.remove('opacity-0');
-clearTimeout(toast._timer);
-toast._timer = setTimeout(() => {
-toast.classList.add('opacity-0');
-}, 2000);
-}
-
-// 5. 인터벌 큐(Queue) 생성기
-function buildQueue(mode) {
-const cfg = configs[mode];
-const queue = [];
-const cycles = mode === 'tabata' ? Math.max(1, cfg.cycles) : 1;
-const rounds = Math.max(1, cfg.rounds);
-
-// 1) 준비
-if (cfg.prepare > 0) {
-queue.push({
-type: 'prepare',
-label: '준비',
-duration: cfg.prepare,
-remRounds: rounds,
-remCycles: cycles
-});
-}
-
-// 2) 사이클 & 라운드 루프
-for (let c = 1; c <= cycles; c++) {
-const remCycles = cycles - c + 1;
-
-for (let r = 1; r <= rounds; r++) {
-const remRounds = rounds - r + 1;
-
-// 운동
-if (cfg.work > 0) {
-queue.push({
-type: 'work',
-label: '운동',
-duration: cfg.work,
-remRounds,
-remCycles
-});
-}
-
-// 휴식 (마지막 사이클의 마지막 라운드에서는 사이클 휴식 생략, 일반 휴식은 설정값이 있으면 포함)
-const isLastRoundOfCycle = (r === rounds);
-const isLastCycle = (c === cycles);
-
-if (cfg.rest > 0 && !(isLastRoundOfCycle && isLastCycle && cfg.cooldown > 0)) {
-queue.push({
-type: 'rest',
-label: '휴식',
-duration: cfg.rest,
-remRounds,
-remCycles
-});
-}
-}
-
-// 사이클 간 휴식 (타바타 모드 & 남은 사이클이 있을 때)
-if (mode === 'tabata' && c < cycles && cfg.cycleRest > 0) {
-queue.push({
-type: 'cycleRest',
-label: '사이클 휴식',
-duration: cfg.cycleRest,
-remRounds: rounds,
-remCycles: cycles - c
-});
-}
-}
-
-// 3) 쿨다운
-if (cfg.cooldown > 0) {
-queue.push({
-type: 'cooldown',
-label: '쿨 다운',
-duration: cfg.cooldown,
-remRounds: 0,
-remCycles: 0
-});
-}
-
-// 예외 처리: 모든 시간이 0으로 설정된 경우 기본 10초 운동 추가
-if (queue.length === 0) {
-queue.push({
-type: 'work',
-label: '운동',
-duration: 10,
-remRounds: 1,
-remCycles: 1
-});
-}
-
-return queue;
-}
-
-// 6. 메인 인터벌 타이머 엔진
-const timer = {
-queue: [],
-currentIndex: 0,
-phaseRemaining: 0,
-isRunning: false,
-isFinished: false,
-intervalId: null,
-lastTickTimestamp: 0,
-accumulatedMs: 0,
-
-reset(mode = appState.timerMode) {
-this.pause();
-appState.timerMode = mode;
-this.queue = buildQueue(mode);
-this.currentIndex = 0;
-this.phaseRemaining = this.queue[0].duration;
-this.isFinished = false;
-this.accumulatedMs = 0;
-this.render();
-},
-
-start() {
-if (this.isFinished) {
-this.reset(appState.timerMode);
-}
-if (this.isRunning) return;
-
-sound.init();
-requestWakeLock();
-this.isRunning = true;
-this.lastTickTimestamp = performance.now();
-
-this.intervalId = setInterval(() => {
-const now = performance.now();
-const delta = now - this.lastTickTimestamp;
-this.lastTickTimestamp = now;
-this.accumulatedMs += delta;
-
-while (this.accumulatedMs >= 1000 && this.isRunning) {
-this.accumulatedMs -= 1000;
-this.tickSecond();
-}
-}, 100);
-
-this.render();
-},
-
-pause() {
-this.isRunning = false;
-if (this.intervalId) {
-clearInterval(this.intervalId);
-this.intervalId = null;
-}
-releaseWakeLock();
-this.render();
-},
-
-toggle() {
-if (this.isRunning) {
-this.pause();
-} else {
-this.start();
-}
-},
-
-tickSecond() {
-if (this.phaseRemaining > 1) {
-this.phaseRemaining -= 1;
-// 3, 2, 1초 남았을 때 비프음
-if (this.phaseRemaining <= 3 && this.phaseRemaining >= 1) {
-sound.beepCountdown();
-}
-this.render();
-} else {
-// 다음 단계로 전환
-this.advancePhase();
-}
-},
-
-advancePhase() {
-if (this.currentIndex + 1 < this.queue.length) {
-this.currentIndex += 1;
-const nextStep = this.queue[this.currentIndex];
-this.phaseRemaining = nextStep.duration;
-
-// 단계별 전환 사운드
-if (nextStep.type === 'work') {
-sound.beepWorkStart();
-} else {
-sound.beepRestStart();
-}
-this.render();
-} else {
-// 운동 완료
-this.phaseRemaining = 0;
-this.isFinished = true;
-this.pause();
-sound.beepFinish();
-this.render();
-}
-},
-
-getTotalRemainingSeconds() {
-if (this.isFinished) return 0;
-let total = this.phaseRemaining;
-for (let i = this.currentIndex + 1; i < this.queue.length; i++) {
-total += this.queue[i].duration;
-}
-return total;
-},
-
-render() {
-const modeTitleEl = document.getElementById('header-mode-title');
-const totalTimeEl = document.getElementById('header-total-time');
-const mainBlock = document.getElementById('main-phase-block');
-const mainLabel = document.getElementById('main-phase-label');
-const mainTime = document.getElementById('main-phase-time');
-const mainSubinfo = document.getElementById('main-phase-subinfo');
-
-const nextBar = document.getElementById('next-phase-bar');
-const nextLabel = document.getElementById('next-phase-label');
-const nextTime = document.getElementById('next-phase-time');
-
-const counterRounds = document.getElementById('counter-rounds');
-const counterCycles = document.getElementById('counter-cycles');
-const cycleWrapper = document.getElementById('cycle-counter-wrapper');
-
-const btnPlayPause = document.getElementById('btn-play-pause');
-const iconPlay = document.getElementById('icon-play');
-const iconPause = document.getElementById('icon-pause');
-const labelPlayPause = document.getElementById('label-play-pause');
-
-// 헤더 모드명 & 전체 남은 시간
-modeTitleEl.textContent = appState.timerMode === 'tabata' ? '타바타' : '라운드';
-totalTimeEl.textContent = formatMMSS(this.getTotalRemainingSeconds());
-
-// 사이클 카운터 표시 여부 (타바타 모드에서만 표시)
-if (appState.timerMode === 'tabata') {
-cycleWrapper.classList.remove('invisible');
-} else {
-cycleWrapper.classList.add('invisible');
-}
-
-// 메인 블록 테마 초기화
-mainBlock.classList.remove('theme-prepare', 'theme-work', 'theme-rest', 'theme-cycleRest', 'theme-cooldown', 'theme-finished');
-nextBar.classList.remove('theme-prepare', 'theme-work', 'theme-rest', 'theme-cycleRest', 'theme-cooldown', 'theme-finished');
-
-if (this.isFinished) {
-mainBlock.classList.add('theme-finished');
-mainLabel.textContent = 'WOD 완료!';
-mainTime.textContent = '00:00';
-mainSubinfo.textContent = '수고하셨습니다! 초기화 또는 시작 버튼으로 재시작';
-
-nextBar.classList.add('theme-cooldown');
-nextLabel.textContent = '모든 인터벌 종료';
-nextTime.textContent = 'DONE';
-
-counterRounds.textContent = '0';
-counterCycles.textContent = '0';
-} else {
-const current = this.queue[this.currentIndex];
-mainBlock.classList.add(theme-${current.type}`);
-mainLabel.textContent = current.label;
-mainTime.textContent = formatMMSS(this.phaseRemaining);
-
-const totalRounds = configs[appState.timerMode].rounds;
-const currentRoundNum = current.remRounds > 0 ? (totalRounds - current.remRounds + 1) : totalRounds;
-mainSubinfo.textContent = current.type === 'prepare'
-? '곧 운동이 시작됩니다'
-: 진행 중 · ${currentRoundNum} / ${totalRounds} 라운드;
-
-counterRounds.textContent = current.remRounds;
-counterCycles.textContent = current.remCycles;
-
-// 다음 단계 미리보기 바
-if (this.currentIndex + 1 < this.queue.length) {
-const next = this.queue[this.currentIndex + 1];
-nextBar.classList.add(theme-${next.type}`);
-nextLabel.textContent = next.label;
-nextTime.textContent = formatMMSS(next.duration);
-} else {
-nextBar.classList.add('theme-finished');
-nextLabel.textContent = '마지막 단계 · 종료 예정';
-nextTime.textContent = 'FINISH';
-}
-}
-
-// 시작 / 일시정지 버튼 스타일 동기화
-const activeColorMap = {
-prepare: '#F2E852',
-work: '#78D64B',
-rest: '#F24444',
-cycleRest: '#F5D742',
-cooldown: '#3B82F6',
-finished: '#22C55E'
-};
-const curType = this.isFinished ? 'finished' : this.queue[this.currentIndex].type;
-const btnBg = activeColorMap[curType] || '#F2E852';
-btnPlayPause.style.backgroundColor = btnBg;
-btnPlayPause.style.color = (curType === 'rest' || curType === 'cooldown') ? '#FFFFFF' : '#111111';
-labelPlayPause.style.color = btnBg;
-
-if (this.isRunning) {
-iconPlay.classList.add('hidden');
-iconPause.classList.remove('hidden');
-labelPlayPause.textContent = '일시정지';
-} else {
-iconPlay.classList.remove('hidden');
-iconPause.classList.add('hidden');
-labelPlayPause.textContent = this.isFinished ? '다시 시작' : '시작';
-}
-}
-};
-
-// 7. 스톱워치(For Time) 엔진
-const stopwatch = {
-elapsedSeconds: 0,
-isRunning: false,
-intervalId: null,
-lastTickTimestamp: 0,
-accumulatedMs: 0,
-laps: [],
-
-start() {
-if (this.isRunning) return;
-sound.init();
-requestWakeLock();
-this.isRunning = true;
-this.lastTickTimestamp = performance.now();
-
-this.intervalId = setInterval(() => {
-const now = performance.now();
-const delta = now - this.lastTickTimestamp;
-this.lastTickTimestamp = now;
-this.accumulatedMs += delta;
-
-while (this.accumulatedMs >= 1000) {
-this.accumulatedMs -= 1000;
-this.elapsedSeconds += 1;
-this.render();
-}
-}, 100);
-
-this.render();
-},
-
-pause() {
-this.isRunning = false;
-if (this.intervalId) {
-clearInterval(this.intervalId);
-this.intervalId = null;
-}
-releaseWakeLock();
-this.render();
-},
-
-toggle() {
-if (this.isRunning) {
-this.pause();
-} else {
-this.start();
-}
-},
-
-recordLap() {
-if (this.elapsedSeconds === 0 && !this.isRunning) return;
-sound.beepLap();
-const prevTotal = this.laps.length > 0 ? this.laps[0].total : 0;
-const split = this.elapsedSeconds - prevTotal;
-this.laps.unshift({
-index: this.laps.length + 1,
-total: this.elapsedSeconds,
-split: split
-});
-this.render();
-showToast(랩${this.laps.length} 기록됨 (${formatMMSS(this.elapsedSeconds)}));
-},
-
-reset() {
-this.pause();
-this.elapsedSeconds = 0;
-this.accumulatedMs = 0;
-this.laps = [];
-this.render();
-},
-
-render() {
-document.getElementById('sw-main-time').textContent = formatMMSS(this.elapsedSeconds);
-document.getElementById('sw-lap-count').textContent = this.laps.length;
-document.getElementById('sw-last-lap').textContent = this.laps.length > 0
-? formatMMSS(this.laps[0].total)
-: '00:00';
-
-const lapListEl = document.getElementById('sw-lap-list');
-if (this.laps.length > 0) {
-lapListEl.classList.remove('hidden');
-lapListEl.innerHTML = this.laps.map(lap => &lt;div class="flex justify-between items-center py-1 border-b border-neutral-800/60 last:border-0"&gt; &lt;span class="font-bold text-neutral-400"&gt;LAP${lap.index}</span>
-<span class="text-neutral-400">구간 +latex
-{formatMMSS(lap.split)}&lt;/span&gt; &lt;span class="font-black text-[#78D64B] tabular-nums"&gt;
-
-{formatMMSS(lap.total)}</span>
-</div>
-`).join('');
-} else {
-lapListEl.classList.add('hidden');
-lapListEl.innerHTML = '';
-}
-
-const iconPlay = document.getElementById('icon-sw-play');
-const iconPause = document.getElementById('icon-sw-pause');
-const label = document.getElementById('label-sw-play-pause');
-
-if (this.isRunning) {
-iconPlay.classList.add('hidden');
-iconPause.classList.remove('hidden');
-label.textContent = '일시정지';
-} else {
-iconPlay.classList.remove('hidden');
-iconPause.classList.add('hidden');
-label.textContent = '시작';
-}
-}
-};
-
-// 8. 인터벌 상세 설정 모달 & 피커 UI 로직
-let draftConfig = null;
-let activePickerField = null;
-let pickerTempMinutes = 0;
-let pickerTempSeconds = 0;
-let pickerTempCount = 1;
-
-const SETTING_SCHEMA = {
-tabata: [
-{ key: 'prepare', label: '준비', desc: '시작하기 전 카운트다운', color: '#F2E852', type: 'time' },
-{ key: 'work', label: '운동', desc: '고강도 운동 시간', color: '#78D64B', type: 'time' },
-{ key: 'rest', label: '휴식', desc: '운동 직후 휴식 시간', color: '#F24444', type: 'time' },
-{ key: 'rounds', label: '라운드', desc: '1라운드는 운동 + 휴식입니다', color: '#4DA3FF', type: 'count', min: 1, max: 99 },
-{ key: 'cycles', label: '사이클', desc: '전체 라운드 묶음 반복 횟수', color: '#F2E852', type: 'count', min: 1, max: 50 },
-{ key: 'cycleRest', label: '사이클 사이에 휴식', desc: '사이클 완료 후 회복 간격', color: '#F5D742', type: 'time' },
-{ key: 'cooldown', label: '쿨 다운', desc: '모든 운동 종료 후 정리 시간', color: '#3B82F6', type: 'time' }
- ],
-round: [
-{ key: 'prepare', label: '준비', desc: '시작하기 전 카운트다운', color: '#F2E852', type: 'time' },
-{ key: 'work', label: '운동', desc: '라운드당 운동 시간', color: '#78D64B', type: 'time' },
-{ key: 'rest', label: '휴식', desc: '라운드 사이 휴식 시간', color: '#F24444', type: 'time' },
-{ key: 'rounds', label: '라운드', desc: '1라운드는 운동 + 휴식입니다', color: '#4DA3FF', type: 'count', min: 1, max: 99 },
-{ key: 'cooldown', label: '쿨 다운', desc: '운동 후 쿨 다운', color: '#3B82F6', type: 'time' }
- ]
-};
-
-function openSettingsModal() {
-timer.pause();
-const mode = appState.timerMode;
-draftConfig = JSON.parse(JSON.stringify(configs[mode]));
-document.getElementById('settings-modal-title').textContent = mode === 'tabata' ? '타바타' : '라운드';
-renderSettingsList();
-document.getElementById('modal-settings').classList.remove('hidden');
-}
-
-function closeSettingsModal() {
-document.getElementById('modal-settings').classList.add('hidden');
-}
-
-function renderSettingsList() {
-const mode = appState.timerMode;
-const schema = SETTING_SCHEMA[mode];
-const container = document.getElementById('settings-list-container');
-
-container.innerHTML = schema.map(item => {
-const val = draftConfig[item.key];
-const formattedVal = item.type === 'time' ? formatShortSetting(val) : ${val}; return
-<button data-setting-key="${item.key}" class="setting-row w-full py-4 flex items-center justify-between text-left active:bg-neutral-800/60 transition"&gt; &lt;div class="pr-3"&gt; &lt;div class="flex items-center gap-2.5"&gt; &lt;span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: ${item.color}"></span>
-<span class="text-lg font-extrabold text-white">${item.label}&lt;/span&gt; &lt;/div&gt; &lt;div class="text-xs text-neutral-400 mt-1 pl-6"&gt;${item.desc}</div>
-</div>
-<div class="flex items-center gap-2 shrink-0">
-<span class="text-2xl font-black text-white tabular-nums">${formattedVal}&lt;/span&gt; &lt;svg class="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"&gt; &lt;path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /&gt; &lt;/svg&gt; &lt;/div&gt; &lt;/button&gt;;
-}).join('');
-
-// 각 행 클릭 시 피커 열기
-container.querySelectorAll('.setting-row').forEach(btn => {
-btn.addEventListener('click', () => {
-const key = btn.getAttribute('data-setting-key');
-openPickerForField(key);
-});
-});
-}
-
-function openPickerForField(key) {
-const mode = appState.timerMode;
-const schemaItem = SETTING_SCHEMA[mode].find(s => s.key === key);
-if (!schemaItem) return;
-
-activePickerField = schemaItem;
-document.getElementById('picker-title').textContent = schemaItem.label;
-
-const timeControls = document.getElementById('picker-time-controls');
-const quickChips = document.getElementById('picker-quick-chips');
-const countControls = document.getElementById('picker-count-controls');
-
-if (schemaItem.type === 'time') {
-timeControls.classList.remove('hidden');
-quickChips.classList.remove('hidden');
-countControls.classList.add('hidden');
-
-const currentSec = draftConfig[key];
-pickerTempMinutes = Math.floor(currentSec / 60);
-pickerTempSeconds = currentSec % 60;
-updatePickerDisplay();
-} else {
-timeControls.classList.add('hidden');
-quickChips.classList.add('hidden');
-countControls.classList.remove('hidden');
-
-pickerTempCount = draftConfig[key];
-document.getElementById('picker-count-unit').textContent = key === 'rounds' ? '라운드' : '사이클';
-updatePickerDisplay();
-}
-
-document.getElementById('modal-picker').classList.remove('hidden');
-}
-
-function updatePickerDisplay() {
-if (!activePickerField) return;
-if (activePickerField.type === 'time') {
-document.getElementById('picker-min-val').textContent = String(pickerTempMinutes).padStart(2, '0');
-document.getElementById('picker-sec-val').textContent = String(pickerTempSeconds).padStart(2, '0');
-} else {
-document.getElementById('picker-count-val').textContent = pickerTempCount;
-}
-}
-
-// 9. 탭 전환 및 이벤트 바인딩
-function switchTab(tabName) {
-appState.activeTab = tabName;
-
-// 하단 탭 스타일 업데이트
-document.querySelectorAll('.nav-tab').forEach(btn => {
-const isTarget = btn.getAttribute('data-tab') === tabName;
-if (isTarget) {
-btn.classList.add('bg-[#2C2C2E]', 'text-white');
-btn.classList.remove('text-neutral-400');
-} else {
-btn.classList.remove('bg-[#2C2C2E]', 'text-white');
-btn.classList.add('text-neutral-400');
-}
-});
-
-const screenTimer = document.getElementById('screen-timer');
-const screenStopwatch = document.getElementById('screen-stopwatch');
-const screenMore = document.getElementById('screen-more');
-
-screenTimer.classList.add('hidden');
-screenStopwatch.classList.add('hidden');
-screenMore.classList.add('hidden');
-
-if (tabName === 'tabata' || tabName === 'round') {
-screenTimer.classList.remove('hidden');
-if (appState.timerMode !== tabName) {
-timer.reset(tabName);
-} else {
-timer.render();
-}
-} else if (tabName === 'stopwatch') {
-screenStopwatch.classList.remove('hidden');
-stopwatch.render();
-} else if (tabName === 'more') {
-screenMore.classList.remove('hidden');
-}
-}
-
-// DOM 로드 후 이벤트 연결
-window.addEventListener('DOMContentLoaded', () => {
-// 하단 내비게이션 탭
-document.querySelectorAll('.nav-tab').forEach(btn => {
-btn.addEventListener('click', () => {
-switchTab(btn.getAttribute('data-tab'));
-});
-});
-
-// 메인 타이머 컨트롤
-document.getElementById('btn-play-pause').addEventListener('click', () => timer.toggle());
-document.getElementById('main-phase-block').addEventListener('click', () => timer.toggle());
-document.getElementById('btn-reset-timer').addEventListener('click', () => {
-timer.reset(appState.timerMode);
-showToast('타이머가 초기화되었습니다');
-});
-
-// 음소거 토글
-document.getElementById('btn-toggle-mute').addEventListener('click', () => {
-appState.isMuted = !appState.isMuted;
-document.getElementById('icon-sound-on').classList.toggle('hidden', appState.isMuted);
-document.getElementById('icon-sound-off').classList.toggle('hidden', !appState.isMuted);
-showToast(appState.isMuted ? '신호음 음소거됨' : '신호음 켜짐');
-});
-
-// 설정 모달 열기/저장/취소
-document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
-document.getElementById('btn-settings-cancel').addEventListener('click', closeSettingsModal);
-document.getElementById('btn-settings-save').addEventListener('click', () => {
-configs[appState.timerMode] = draftConfig;
-saveConfigs();
-closeSettingsModal();
-timer.reset(appState.timerMode);
-showToast('인터벌 설정이 저장되었습니다');
-});
-
-// 피커 컨트롤 이벤트
-document.getElementById('btn-picker-close').addEventListener('click', () => {
-document.getElementById('modal-picker').classList.add('hidden');
-});
-
-document.getElementById('btn-min-up').addEventListener('click', () => {
-pickerTempMinutes = (pickerTempMinutes + 1) % 60;
-updatePickerDisplay();
-});
-document.getElementById('btn-min-down').addEventListener('click', () => {
-pickerTempMinutes = (pickerTempMinutes - 1 + 60) % 60;
-updatePickerDisplay();
-});
-document.getElementById('btn-sec-up').addEventListener('click', () => {
-pickerTempSeconds = (pickerTempSeconds + 1) % 60;
-updatePickerDisplay();
-});
-document.getElementById('btn-sec-down').addEventListener('click', () => {
-pickerTempSeconds = (pickerTempSeconds - 1 + 60) % 60;
-updatePickerDisplay();
-});
-
-document.querySelectorAll('.quick-sec-btn').forEach(btn => {
-btn.addEventListener('click', () => {
-if (btn.hasAttribute('data-set-zero')) {
-pickerTempMinutes = 0;
-pickerTempSeconds = 0;
-} else {
-const add = parseInt(btn.getAttribute('data-add-sec'), 10);
-const total = Math.min(3599, pickerTempMinutes * 60 + pickerTempSeconds + add);
-pickerTempMinutes = Math.floor(total / 60);
-pickerTempSeconds = total % 60;
-}
-updatePickerDisplay();
-});
-});
-
-document.getElementById('btn-count-up').addEventListener('click', () => {
-if (!activePickerField) return;
-pickerTempCount = Math.min(activePickerField.max || 99, pickerTempCount + 1);
-updatePickerDisplay();
-});
-document.getElementById('btn-count-down').addEventListener('click', () => {
-if (!activePickerField) return;
-pickerTempCount = Math.max(activePickerField.min || 1, pickerTempCount - 1);
-updatePickerDisplay();
-});
-
-document.getElementById('btn-picker-confirm').addEventListener('click', () => {
-if (!activePickerField) return;
-if (activePickerField.type === 'time') {
-draftConfig[activePickerField.key] = pickerTempMinutes * 60 + pickerTempSeconds;
-} else {
-draftConfig[activePickerField.key] = pickerTempCount;
-}
-document.getElementById('modal-picker').classList.add('hidden');
-renderSettingsList();
-});
-
-// 스톱워치 이벤트
-document.getElementById('btn-sw-play-pause').addEventListener('click', () => stopwatch.toggle());
-document.getElementById('sw-main-block').addEventListener('click', () => {
-if (stopwatch.isRunning) {
-stopwatch.recordLap();
-} else {
-stopwatch.start();
-}
-});
-document.getElementById('btn-sw-lap').addEventListener('click', () => stopwatch.recordLap());
-document.getElementById('btn-sw-reset').addEventListener('click', () => {
-stopwatch.reset();
-showToast('스톱워치 초기화됨');
-});
-document.getElementById('btn-sw-reset-bottom').addEventListener('click', () => {
-stopwatch.reset();
-showToast('스톱워치 초기화됨');
-});
-
-// 더보기 탭 프리셋 & 소리 테스트
-document.querySelectorAll('.preset-btn').forEach(btn => {
-btn.addEventListener('click', () => {
-const preset = btn.getAttribute('data-preset');
-if (preset === 'classic-tabata') {
-configs.tabata = { prepare: 10, work: 20, rest: 10, rounds: 8, cycles: 1, cycleRest: 0, cooldown: 0 };
-saveConfigs();
-switchTab('tabata');
-timer.reset('tabata');
-} else if (preset === 'emom-10') {
-configs.round = { prepare: 10, work: 60, rest: 0, rounds: 10, cycles: 1, cycleRest: 0, cooldown: 0 };
-saveConfigs();
-switchTab('round');
-timer.reset('round');
-} else if (preset === 'hiit-30-30') {
-configs.round = { prepare: 15, work: 30, rest: 30, rounds: 10, cycles: 1, cycleRest: 0, cooldown: 0 };
-saveConfigs();
-switchTab('round');
-timer.reset('round');
-} else if (preset === 'boxing-round') {
-configs.round = { prepare: 10, work: 180, rest: 60, rounds: 5, cycles: 1, cycleRest: 0, cooldown: 60 };
-saveConfigs();
-switchTab('round');
-timer.reset('round');
-}
-showToast('WOD 프리셋이 적용되었습니다');
-});
-});
-
-document.getElementById('btn-test-sound').addEventListener('click', () => {
-sound.beepWorkStart();
-showToast('운동 시작 신호음 재생');
-});
-
-document.getElementById('chk-countdown-beep').addEventListener('change', (e) => {
-appState.countdownBeep = e.target.checked;
-});
-
-// 초기 타이머 세팅
-timer.reset('tabata');
-});
-</script>
+<body>
+  <div class="app">
+    <header class="top-bar">
+      <button id="btnOpenSettings" class="icon-btn" title="설정">⚙</button>
+      <div class="top-center">
+        <div id="headerModeName" class="mode-title">타바타</div>
+        <div id="headerTotalTime" class="total-time">10:05</div>
+      </div>
+      <div class="top-right-group">
+        <button id="btnSoundToggle" class="icon-btn" title="소리">🔊</button>
+        <button id="btnReset" class="icon-btn" title="초기화">↻</button>
+      </div>
+    </header>
+
+    <main id="runnerView" class="main-stage">
+      <div id="currentPhaseBox" class="current-phase-box">
+        <div id="phaseLabel" class="phase-label">준비</div>
+        <div id="bigClock" class="big-clock">00:20</div>
+        <div id="tapHint" class="tap-hint">터치하여 일시정지 / 시작 가능</div>
+      </div>
+      <div id="nextPhaseBox" class="next-phase-box">
+        <div id="nextLabel" class="next-label">운동</div>
+        <div id="nextClock" class="next-clock">00:25</div>
+      </div>
+    </main>
+
+    <main id="stopwatchView" class="stopwatch-view hidden">
+      <div id="swMainArea" class="sw-main">
+        <div id="swLapTitle" class="sw-lap-badge">타임 랩 1</div>
+        <div id="swClock" class="sw-clock">00:00</div>
+        <div class="tap-hint">화면 터치: 랩 기록 / 길게 터치: 리셋</div>
+      </div>
+      <div class="sw-sub">
+        <div id="swPrevLabel" class="sw-sub-title">이전 랩 기록</div>
+        <div id="swPrevTime" class="sw-sub-time">--:--</div>
+      </div>
+      <div id="swLapsList" class="sw-laps-list"></div>
+    </main>
+
+    <section id="settingsView" class="panel-screen hidden">
+      <div class="panel-header">
+        <button id="btnCancelSettings" class="panel-btn">취소</button>
+        <strong id="settingsTitle">타바타 설정</strong>
+        <button id="btnSaveSettings" class="panel-btn primary">저장</button>
+      </div>
+      <div class="section-banner">인터벌</div>
+      <div id="settingsList"></div>
+      <div id="valueEditor" class="editor-box hidden"></div>
+    </section>
+
+    <section id="moreView" class="panel-screen hidden">
+      <div class="panel-header">
+        <strong>WOD 프리셋 및 설정</strong>
+        <button id="btnCloseMore" class="panel-btn">타이머로</button>
+      </div>
+
+      <div class="preset-card">
+        <div>
+          <div class="setting-title">기본 타바타 (20s / 25s × 4R × 3C)</div>
+          <div class="setting-desc">준비 20초, 운동 25초, 휴식 25초, 4라운드, 3사이클</div>
+        </div>
+        <button class="panel-btn primary" onclick="applyPreset('tabata_default')">적용</button>
+      </div>
+
+      <div class="preset-card">
+        <div>
+          <div class="setting-title">크로스핏 라운드 WOD (1m40s × 10R)</div>
+          <div class="setting-desc">준비 23초, 운동 1분 40초, 휴식 0초, 10라운드</div>
+        </div>
+        <button class="panel-btn primary" onclick="applyPreset('round_10')">적용</button>
+      </div>
+
+      <div class="preset-card">
+        <div>
+          <div class="setting-title">EMOM 12분 (1m 운동 / 0s 휴식 × 12R)</div>
+          <div class="setting-desc">준비 10초, 매 1분마다 라운드 전환</div>
+        </div>
+        <button class="panel-btn primary" onclick="applyPreset('emom_12')">적용</button>
+      </div>
+
+      <div class="setting-card" onclick="toggleWakeLockSetting()">
+        <div class="setting-left">
+          <span class="dot work"></span>
+          <div>
+            <div class="setting-title">화면 꺼짐 방지</div>
+            <div class="setting-desc">운동 중 화면 자동 잠금 유지 시도</div>
+          </div>
+        </div>
+        <div id="wakeLockStatus" class="setting-val">ON</div>
+      </div>
+
+      <div class="setting-card" onclick="testBeep()">
+        <div class="setting-left">
+          <span class="dot prep"></span>
+          <div>
+            <div class="setting-title">알림음 테스트</div>
+            <div class="setting-desc">3초 카운트다운 및 전환음 확인</div>
+          </div>
+        </div>
+        <div class="setting-val">♪</div>
+      </div>
+    </section>
+
+    <section id="controlPanel" class="control-panel">
+      <div class="control-row">
+        <div id="leftCounterBox" class="counter-box">
+          <div id="leftCounterNum" class="counter-num blue">4</div>
+          <div id="leftCounterLabel" class="counter-label">남은 라운드</div>
+        </div>
+
+        <div class="play-btn-wrap">
+          <button id="btnPlayPause" class="play-btn" aria-label="시작 또는 일시정지">▶</button>
+          <div id="playCaption" class="play-caption">시작</div>
+        </div>
+
+        <div id="rightCounterBox" class="counter-box">
+          <div id="rightCounterNum" class="counter-num yellow">3</div>
+          <div id="rightCounterLabel" class="counter-label">남은 사이클</div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="bottom-tabs">
+      <button id="tabTabata" class="tab-btn active" onclick="switchTab('tabata')">
+        <span class="tab-ico">⏱</span>
+        <span>타바타</span>
+      </button>
+      <button id="tabRound" class="tab-btn" onclick="switchTab('round')">
+        <span class="tab-ico">↻</span>
+        <span>라운드</span>
+      </button>
+      <button id="tabStopwatch" class="tab-btn" onclick="switchTab('stopwatch')">
+        <span class="tab-ico">◎</span>
+        <span>스톱워치</span>
+      </button>
+      <button id="tabMore" class="tab-btn" onclick="switchTab('more')">
+        <span class="tab-ico">≡</span>
+        <span>더보기</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    const state = {
+      activeTab: 'tabata',
+      isRunning: false,
+      soundEnabled: true,
+      wakeLockEnabled: true,
+      wakeLockSentinel: null,
+      audioCtx: null,
+
+      configs: {
+        tabata: {
+          prep: 20,
+          work: 25,
+          rest: 25,
+          rounds: 4,
+          cycles: 3,
+          cycleRest: 30,
+          cooldown: 0
+        },
+        round: {
+          prep: 23,
+          work: 100,
+          rest: 0,
+          rounds: 10,
+          cycles: 1,
+          cycleRest: 0,
+          cooldown: 0
+        }
+      },
+
+      draftConfig: null,
+      editingKey: null,
+
+      queue: [],
+      stepIndex: 0,
+      remainingInStep: 20,
+      lastBeepedSec: null,
+      intervalId: null,
+
+      swElapsed: 0,
+      swRunning: false,
+      swLaps: [],
+      swIntervalId: null
+    };
+
+    function formatMMSS(totalSec) {
+      const s = Math.max(0, Math.floor(totalSec));
+      const mm = String(Math.floor(s / 60)).padStart(2, '0');
+      const ss = String(s % 60).padStart(2, '0');
+      return `${mm}:${ss}`;
+    }
+
+    function ensureAudio() {
+      if (!state.soundEnabled) return null;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      if (!state.audioCtx) {
+        state.audioCtx = new AudioContextClass();
+      }
+      if (state.audioCtx.state === 'suspended') {
+        state.audioCtx.resume().catch(() => {});
+      }
+      return state.audioCtx;
+    }
+
+    function playTone(freq = 880, duration = 0.14, type = 'sine') {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playTransitionTone(phaseType) {
+      if (phaseType === 'work') {
+        playTone(1046.5, 0.25, 'triangle');
+      } else if (phaseType === 'rest' || phaseType === 'cycleRest') {
+        playTone(587.33, 0.25, 'sine');
+      } else if (phaseType === 'done') {
+        playTone(784, 0.14, 'triangle');
+        setTimeout(() => playTone(1046.5, 0.3, 'triangle'), 160);
+      } else {
+        playTone(740, 0.18, 'sine');
+      }
+    }
+
+    async function requestWakeLock() {
+      if (!state.wakeLockEnabled || !('wakeLock' in navigator)) return;
+      try {
+        if (!state.wakeLockSentinel) {
+          state.wakeLockSentinel = await navigator.wakeLock.request('screen');
+        }
+      } catch (e) {}
+    }
+
+    async function releaseWakeLock() {
+      try {
+        if (state.wakeLockSentinel) {
+          await state.wakeLockSentinel.release();
+          state.wakeLockSentinel = null;
+        }
+      } catch (e) {}
+    }
+
+    function buildQueue(mode) {
+      const cfg = state.configs[mode];
+      const steps = [];
+
+      if (cfg.prep > 0) {
+        steps.push({
+          type: 'prep',
+          label: '준비',
+          duration: cfg.prep,
+          remRounds: cfg.rounds,
+          remCycles: mode === 'tabata' ? cfg.cycles : 1
+        });
+      }
+
+      const cycleCount = mode === 'tabata' ? Math.max(1, cfg.cycles) : 1;
+      const roundCount = Math.max(1, cfg.rounds);
+
+      for (let c = 1; c <= cycleCount; c++) {
+        const remCyclesAfterThis = cycleCount - c + 1;
+        for (let r = 1; r <= roundCount; r++) {
+          const remRoundsInCycle = roundCount - r + 1;
+
+          if (cfg.work > 0) {
+            steps.push({
+              type: 'work',
+              label: '운동',
+              duration: cfg.work,
+              remRounds: remRoundsInCycle,
+              remCycles: remCyclesAfterThis
+            });
+          }
+
+          if (cfg.rest > 0 && r < roundCount) {
+            steps.push({
+              type: 'rest',
+              label: '휴식',
+              duration: cfg.rest,
+              remRounds: remRoundsInCycle,
+              remCycles: remCyclesAfterThis
+            });
+          }
+        }
+
+        if (mode === 'tabata' && cfg.cycleRest > 0 && c < cycleCount) {
+          steps.push({
+            type: 'cycleRest',
+            label: '사이클 휴식',
+            duration: cfg.cycleRest,
+            remRounds: cfg.rounds,
+            remCycles: remCyclesAfterThis - 1
+          });
+        }
+      }
+
+      if (cfg.cooldown > 0) {
+        steps.push({
+          type: 'cooldown',
+          label: '쿨 다운',
+          duration: cfg.cooldown,
+          remRounds: 0,
+          remCycles: 0
+        });
+      }
+
+      steps.push({
+        type: 'done',
+        label: '운동 완료',
+        duration: 0,
+        remRounds: 0,
+        remCycles: 0
+      });
+
+      return steps;
+    }
+
+    function getPhasePalette(type) {
+      if (type === 'prep' || type === 'cycleRest') {
+        return { bg: 'var(--prep-bg)', fg: 'var(--prep-fg)', btnBg: 'var(--prep-bg)', btnFg: 'var(--prep-fg)' };
+      }
+      if (type === 'work') {
+        return { bg: 'var(--work-bg)', fg: 'var(--work-fg)', btnBg: 'var(--work-bg)', btnFg: 'var(--work-fg)' };
+      }
+      if (type === 'rest') {
+        return { bg: 'var(--rest-bg)', fg: 'var(--rest-fg)', btnBg: 'var(--rest-bg)', btnFg: 'var(--rest-fg)' };
+      }
+      if (type === 'cooldown') {
+        return { bg: 'var(--cool-bg)', fg: 'var(--cool-fg)', btnBg: 'var(--cool-bg)', btnFg: 'var(--cool-fg)' };
+      }
+      return { bg: 'var(--done-bg)', fg: 'var(--done-fg)', btnBg: 'var(--work-bg)', btnFg: 'var(--work-fg)' };
+    }
+
+    function computeRemainingTotalSec() {
+      if (!state.queue.length) return 0;
+      const cur = state.queue[state.stepIndex];
+      let sum = cur ? state.remainingInStep : 0;
+      for (let i = state.stepIndex + 1; i < state.queue.length; i++) {
+        sum += state.queue[i].duration || 0;
+      }
+      return sum;
+    }
+
+    function renderAll() {
+      const mode = state.activeTab;
+      document.getElementById('tabTabata').classList.toggle('active', mode === 'tabata');
+      document.getElementById('tabRound').classList.toggle('active', mode === 'round');
+      document.getElementById('tabStopwatch').classList.toggle('active', mode === 'stopwatch');
+      document.getElementById('tabMore').classList.toggle('active', mode === 'more');
+
+      document.getElementById('btnSoundToggle').textContent = state.soundEnabled ? '🔊' : '🔇';
+      document.getElementById('wakeLockStatus').textContent = state.wakeLockEnabled ? 'ON' : 'OFF';
+
+      const runnerView = document.getElementById('runnerView');
+      const stopwatchView = document.getElementById('stopwatchView');
+      const settingsView = document.getElementById('settingsView');
+      const moreView = document.getElementById('moreView');
+      const controlPanel = document.getElementById('controlPanel');
+
+      runnerView.classList.add('hidden');
+      stopwatchView.classList.add('hidden');
+      settingsView.classList.add('hidden');
+      moreView.classList.add('hidden');
+      controlPanel.classList.remove('hidden');
+
+      if (mode === 'more') {
+        moreView.classList.remove('hidden');
+        controlPanel.classList.add('hidden');
+        document.getElementById('headerModeName').textContent = '더보기';
+        document.getElementById('headerTotalTime').textContent = '';
+        return;
+      }
+
+      if (mode === 'stopwatch') {
+        stopwatchView.classList.remove('hidden');
+        document.getElementById('headerModeName').textContent = '스톱워치';
+        document.getElementById('headerTotalTime').textContent = '';
+        document.getElementById('rightCounterBox').classList.add('hidden');
+        document.getElementById('leftCounterLabel').textContent = '랩 횟수';
+        document.getElementById('leftCounterNum').textContent = String(state.swLaps.length + 1);
+
+        document.getElementById('swLapTitle').textContent = `타임 랩 ${state.swLaps.length + 1}`;
+        document.getElementById('swClock').textContent = formatMMSS(state.swElapsed);
+
+        if (state.swLaps.length > 0) {
+          const last = state.swLaps[state.swLaps.length - 1];
+          document.getElementById('swPrevLabel').textContent = `랩 ${last.lapNo} 기록`;
+          document.getElementById('swPrevTime').textContent = formatMMSS(last.split);
+        } else {
+          document.getElementById('swPrevLabel').textContent = '이전 랩 기록';
+          document.getElementById('swPrevTime').textContent = '--:--';
+        }
+
+        const listEl = document.getElementById('swLapsList');
+        if (state.swLaps.length === 0) {
+          listEl.innerHTML = '<div style="color:#8892a2;text-align:center;padding:8px 0;">타이머 실행 중 화면을 터치하면 구간(랩) 기록이 저장됩니다.</div>';
+        } else {
+          listEl.innerHTML = state.swLaps
+            .slice()
+            .reverse()
+            .map(item => `<div class="sw-lap-row"><span>랩 ${item.lapNo}</span><span>구간 ${formatMMSS(item.split)} / 누적 ${formatMMSS(item.total)}</span></div>`)
+            .join('');
+        }
+
+        const btnPlay = document.getElementById('btnPlayPause');
+        btnPlay.textContent = state.swRunning ? '❚❚' : '▶';
+        btnPlay.style.background = 'var(--work-bg)';
+        btnPlay.style.color = 'var(--work-fg)';
+        document.getElementById('playCaption').textContent = state.swRunning ? '일시정지' : '시작';
+        return;
+      }
+
+      // tabata or round
+      runnerView.classList.remove('hidden');
+      document.getElementById('headerModeName').textContent = mode === 'tabata' ? '타바타' : '라운드';
+      document.getElementById('headerTotalTime').textContent = formatMMSS(computeRemainingTotalSec());
+
+      const cur = state.queue[state.stepIndex] || { type: 'done', label: '운동 완료', duration: 0, remRounds: 0, remCycles: 0 };
+      const next = state.queue[state.stepIndex + 1] || null;
+      const palette = getPhasePalette(cur.type);
+
+      const curBox = document.getElementById('currentPhaseBox');
+      curBox.style.background = palette.bg;
+      curBox.style.color = palette.fg;
+
+      document.getElementById('phaseLabel').textContent = cur.label;
+      document.getElementById('bigClock').textContent = formatMMSS(state.remainingInStep);
+      document.getElementById('tapHint').textContent = state.isRunning ? '터치하여 일시정지' : '터치하여 시작';
+
+      const nextBox = document.getElementById('nextPhaseBox');
+      if (next && next.type !== 'done') {
+        const nextPal = getPhasePalette(next.type);
+        nextBox.classList.remove('hidden');
+        nextBox.style.background = nextPal.bg;
+        nextBox.style.color = nextPal.fg;
+        document.getElementById('nextLabel').textContent = next.label;
+        document.getElementById('nextClock').textContent = formatMMSS(next.duration);
+      } else {
+        nextBox.classList.add('hidden');
+      }
+
+      document.getElementById('leftCounterLabel').textContent = '남은 라운드';
+      document.getElementById('leftCounterNum').textContent = String(cur.remRounds ?? 0);
+
+      const rightBox = document.getElementById('rightCounterBox');
+      if (mode === 'tabata') {
+        rightBox.classList.remove('hidden');
+        document.getElementById('rightCounterLabel').textContent = '남은 사이클';
+        document.getElementById('rightCounterNum').textContent = String(cur.remCycles ?? 0);
+      } else {
+        rightBox.classList.add('hidden');
+      }
+
+      const btnPlay = document.getElementById('btnPlayPause');
+      btnPlay.textContent = state.isRunning ? '❚❚' : '▶';
+      btnPlay.style.background = palette.btnBg;
+      btnPlay.style.color = palette.btnFg;
+      document.getElementById('playCaption').textContent = state.isRunning ? '일시정지' : '시작';
+    }
+
+    function stopIntervalTimers() {
+      if (state.intervalId) {
+        clearInterval(state.intervalId);
+        state.intervalId = null;
+      }
+      if (state.swIntervalId) {
+        clearInterval(state.swIntervalId);
+        state.swIntervalId = null;
+      }
+    }
+
+    function advanceIntervalStep() {
+      if (state.stepIndex < state.queue.length - 1) {
+        state.stepIndex += 1;
+        const nextStep = state.queue[state.stepIndex];
+        state.remainingInStep = nextStep.duration;
+        state.lastBeepedSec = null;
+        playTransitionTone(nextStep.type);
+        if (nextStep.type === 'done') {
+          pauseTimer();
+        }
+        renderAll();
+      } else {
+        pauseTimer();
+        renderAll();
+      }
+    }
+
+    function startTimer() {
+      if (state.activeTab === 'stopwatch') {
+        ensureAudio();
+        requestWakeLock();
+        state.swRunning = true;
+        stopIntervalTimers();
+        state.swIntervalId = setInterval(() => {
+          state.swElapsed += 1;
+          renderAll();
+        }, 1000);
+        renderAll();
+        return;
+      }
+
+      if (!state.queue.length) {
+        resetIntervalMode(false);
+      }
+
+      const cur = state.queue[state.stepIndex];
+      if (!cur || cur.type === 'done') {
+        resetIntervalMode(false);
+      }
+
+      ensureAudio();
+      requestWakeLock();
+      state.isRunning = true;
+      stopIntervalTimers();
+
+      state.intervalId = setInterval(() => {
+        if (!state.isRunning) return;
+        if (state.remainingInStep > 1) {
+          state.remainingInStep -= 1;
+          if (state.remainingInStep <= 3 && state.remainingInStep >= 1 && state.lastBeepedSec !== state.remainingInStep) {
+            state.lastBeepedSec = state.remainingInStep;
+            playTone(880, 0.11, 'sine');
+          }
+          renderAll();
+        } else {
+          advanceIntervalStep();
+        }
+      }, 1000);
+
+      renderAll();
+    }
+
+    function pauseTimer() {
+      state.isRunning = false;
+      state.swRunning = false;
+      stopIntervalTimers();
+      releaseWakeLock();
+      renderAll();
+    }
+
+    function togglePlayPause() {
+      if (state.activeTab === 'stopwatch') {
+        if (state.swRunning) pauseTimer();
+        else startTimer();
+        return;
+      }
+      if (state.isRunning) pauseTimer();
+      else startTimer();
+    }
+
+    function resetIntervalMode(keepRunning = false) {
+      const wasRunning = keepRunning && state.isRunning;
+      pauseTimer();
+      const mode = (state.activeTab === 'round') ? 'round' : 'tabata';
+      state.queue = buildQueue(mode);
+      state.stepIndex = 0;
+      state.remainingInStep = state.queue[0] ? state.queue[0].duration : 0;
+      state.lastBeepedSec = null;
+      renderAll();
+      if (wasRunning) startTimer();
+    }
+
+    function resetStopwatch() {
+      pauseTimer();
+      state.swElapsed = 0;
+      state.swLaps = [];
+      renderAll();
+    }
+
+    function recordStopwatchLap() {
+      if (!state.swRunning && state.swElapsed === 0) return;
+      const prevTotal = state.swLaps.length > 0 ? state.swLaps[state.swLaps.length - 1].total : 0;
+      const split = Math.max(0, state.swElapsed - prevTotal);
+      state.swLaps.push({
+        lapNo: state.swLaps.length + 1,
+        split,
+        total: state.swElapsed
+      });
+      playTone(987.77, 0.12, 'triangle');
+      renderAll();
+    }
+
+    function switchTab(tabName) {
+      pauseTimer();
+      document.getElementById('settingsView').classList.add('hidden');
+      state.activeTab = tabName;
+      if (tabName === 'tabata' || tabName === 'round') {
+        state.queue = buildQueue(tabName);
+        state.stepIndex = 0;
+        state.remainingInStep = state.queue[0] ? state.queue[0].duration : 0;
+        state.lastBeepedSec = null;
+      }
+      renderAll();
+    }
+
+    function openSettings() {
+      if (state.activeTab !== 'tabata' && state.activeTab !== 'round') return;
+      pauseTimer();
+      state.draftConfig = Object.assign({}, state.configs[state.activeTab]);
+      state.editingKey = null;
+      document.getElementById('settingsTitle').textContent = state.activeTab === 'tabata' ? '타바타 설정' : '라운드 설정';
+      document.getElementById('runnerView').classList.add('hidden');
+      document.getElementById('controlPanel').classList.add('hidden');
+      document.getElementById('settingsView').classList.remove('hidden');
+      renderSettingsList();
+    }
+
+    function renderSettingsList() {
+      const mode = state.activeTab;
+      const cfg = state.draftConfig;
+      const items = [
+        { key: 'prep', dot: 'prep', title: '준비', desc: '시작하기 전 카운트다운', isTime: true },
+        { key: 'work', dot: 'work', title: '운동', desc: '인터벌 운동 시간', isTime: true },
+        { key: 'rest', dot: 'rest', title: '휴식', desc: '라운드 사이 휴식 시간', isTime: true },
+        { key: 'rounds', dot: 'cool', title: '라운드', desc: '1라운드는 운동 + 휴식입니다', isTime: false }
+      ];
+
+      if (mode === 'tabata') {
+        items.push({ key: 'cycles', dot: 'prep', title: '사이클', desc: '전체 라운드 묶음 반복 횟수', isTime: false });
+        items.push({ key: 'cycleRest', dot: 'prep', title: '사이클 사이에 휴식', desc: '사이클 간 회복 시간', isTime: true });
+      }
+
+      items.push({ key: 'cooldown', dot: 'cool', title: '쿨 다운', desc: '운동 후 정리 운동', isTime: true });
+
+      const listEl = document.getElementById('settingsList');
+      listEl.innerHTML = items.map(it => {
+        const valText = it.isTime ? formatMMSS(cfg[it.key]) : String(cfg[it.key]);
+        return `
+          <div class="setting-row" onclick="selectSettingItem('${it.key}', ${it.isTime}, '${it.title}')">
+            <div class="setting-left">
+              <span class="dot ${it.dot}"></span>
+              <div>
+                <div class="setting-title">${it.title}</div>
+                <div class="setting-desc">${it.desc}</div>
+              </div>
+            </div>
+            <div class="setting-val"><span>${valText}</span><span class="chev">›</span></div>
+          </div>
+        `;
+      }).join('');
+
+      renderValueEditor();
+    }
+
+    function selectSettingItem(key, isTime, title) {
+      state.editingKey = { key, isTime, title };
+      renderValueEditor();
+    }
+
+    function renderValueEditor() {
+      const box = document.getElementById('valueEditor');
+      if (!state.editingKey) {
+        box.classList.add('hidden');
+        return;
+      }
+      const { key, isTime, title } = state.editingKey;
+      const val = state.draftConfig[key];
+      const display = isTime ? formatMMSS(val) : String(val);
+
+      box.classList.remove('hidden');
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>${title} 조절</strong>
+          <span style="font-size:12px;color:#9aa3b2;">${isTime ? '5초 단위 조절' : '1회 단위 조절'}</span>
+        </div>
+        <div class="stepper-row">
+          <button class="step-btn" onclick="adjustDraftValue(${isTime ? -5 : -1})">−</button>
+          <div class="step-readout">${display}</div>
+          <button class="step-btn" onclick="adjustDraftValue(${isTime ? 5 : 1})">+</button>
+        </div>
+      `;
+    }
+
+    function adjustDraftValue(delta) {
+      if (!state.editingKey) return;
+      const { key, isTime } = state.editingKey;
+      const minVal = isTime ? 0 : 1;
+      const maxVal = isTime ? 3600 : 99;
+      const nextVal = Math.max(minVal, Math.min(maxVal, (state.draftConfig[key] || 0) + delta));
+      state.draftConfig[key] = nextVal;
+      renderSettingsList();
+    }
+
+    function closeSettings(save) {
+      if (save && state.draftConfig) {
+        state.configs[state.activeTab] = Object.assign({}, state.draftConfig);
+      }
+      state.draftConfig = null;
+      state.editingKey = null;
+      document.getElementById('settingsView').classList.add('hidden');
+      document.getElementById('runnerView').classList.remove('hidden');
+      document.getElementById('controlPanel').classList.remove('hidden');
+      resetIntervalMode(false);
+    }
+
+    function applyPreset(presetName) {
+      if (presetName === 'tabata_default') {
+        state.configs.tabata = { prep: 20, work: 25, rest: 25, rounds: 4, cycles: 3, cycleRest: 30, cooldown: 0 };
+        switchTab('tabata');
+      } else if (presetName === 'round_10') {
+        state.configs.round = { prep: 23, work: 100, rest: 0, rounds: 10, cycles: 1, cycleRest: 0, cooldown: 0 };
+        switchTab('round');
+      } else if (presetName === 'emom_12') {
+        state.configs.round = { prep: 10, work: 60, rest: 0, rounds: 12, cycles: 1, cycleRest: 0, cooldown: 0 };
+        switchTab('round');
+      }
+    }
+
+    function toggleWakeLockSetting() {
+      state.wakeLockEnabled = !state.wakeLockEnabled;
+      if (!state.wakeLockEnabled) releaseWakeLock();
+      renderAll();
+    }
+
+    function testBeep() {
+      const prev = state.soundEnabled;
+      state.soundEnabled = true;
+      playTone(880, 0.14, 'sine');
+      setTimeout(() => playTone(1174.66, 0.2, 'triangle'), 180);
+      state.soundEnabled = prev;
+    }
+
+    // Event bindings
+    document.getElementById('btnPlayPause').addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlayPause();
+    });
+
+    document.getElementById('btnReset').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (state.activeTab === 'stopwatch') resetStopwatch();
+      else resetIntervalMode(false);
+    });
+
+    document.getElementById('btnSoundToggle').addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.soundEnabled = !state.soundEnabled;
+      if (state.soundEnabled) testBeep();
+      renderAll();
+    });
+
+    document.getElementById('btnOpenSettings').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openSettings();
+    });
+
+    document.getElementById('btnCancelSettings').addEventListener('click', () => closeSettings(false));
+    document.getElementById('btnSaveSettings').addEventListener('click', () => closeSettings(true));
+    document.getElementById('btnCloseMore').addEventListener('click', () => switchTab('tabata'));
+
+    document.getElementById('runnerView').addEventListener('click', () => {
+      togglePlayPause();
+    });
+
+    let swLongPressTimer = null;
+    const swMainArea = document.getElementById('swMainArea');
+    swMainArea.addEventListener('touchstart', () => {
+      swLongPressTimer = setTimeout(() => {
+        resetStopwatch();
+        swLongPressTimer = null;
+      }, 700);
+    }, { passive: true });
+
+    swMainArea.addEventListener('touchend', () => {
+      if (swLongPressTimer) {
+        clearTimeout(swLongPressTimer);
+        swLongPressTimer = null;
+        recordStopwatchLap();
+      }
+    });
+
+    swMainArea.addEventListener('click', () => {
+      if (!('ontouchstart' in window)) {
+        recordStopwatchLap();
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && (state.isRunning || state.swRunning)) {
+        requestWakeLock();
+      }
+    });
+
+    // Initial build
+    state.queue = buildQueue('tabata');
+    state.stepIndex = 0;
+    state.remainingInStep = state.queue[0] ? state.queue[0].duration : 0;
+    renderAll();
+  </script>
 </body>
 </html>
